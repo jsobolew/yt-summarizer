@@ -7,6 +7,7 @@ import os
 from typing import Optional, Dict, List
 import logging
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,23 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
+
+class SentimentModel(BaseModel):
+    positive: int
+    negative: int
+    neutral: int
+    emotions: List[str]
+    class Config:
+        extra = "forbid"
+
+class InsightsModel(BaseModel):
+    summary: str
+    topics: List[str]
+    sentiment: SentimentModel
+    key_points: List[str]
+    quotes: List[str]
+    class Config:
+        extra = "forbid"
 
 class YouTubeAnalyzer:
     def __init__(self):
@@ -61,38 +79,30 @@ class YouTubeAnalyzer:
             logger.error(f"Error getting captions: {e}")
             return None
 
-    def analyze_captions(self, captions: str) -> Optional[str]:
-        """Analyze captions using GPT-4.1-nano and generate insights."""
+    def analyze_captions(self, captions: str) -> Optional[InsightsModel]:
+        """Analyze captions using GPT-4o and generate structured insights."""
         try:
-            # Prepare the prompt for analysis
-            system_message = "You are a helpful assistant that analyzes video transcripts and extracts meaningful insights."
-            user_message = f"""Please analyze the following video transcript and provide key insights:
+            system_message = "You are a helpful assistant that analyzes video transcripts and extracts structured insights."
+            user_message = (
+                "Analyze the following video transcript and extract:\n"
+                "1. summary (str): A concise summary of the video.\n"
+                "2. topics (list of main topics discussed)\n"
+                "3. sentiment (object): {positive (int), negative (int), neutral (int), emotions (list of str)}\n"
+                "4. key_points (list of key insights and takeaways)\n"
+                "5. quotes (list of important quotes or statements)\n"
+                "Respond in the format of the provided Pydantic model.\n"
+                f"\nTranscript:\n{captions}"
+            )
 
-Transcript:
-{captions}
-
-Please provide:
-1. Main topics discussed
-2. Key insights and takeaways
-3. Important quotes or statements
-4. Overall sentiment and tone
-5. Any notable patterns or recurring themes
-
-Format the response in a clear, structured way."""
-
-            # Make API call using the new Responses API
-            response = self.client.responses.create(
-                model="gpt-4.1-nano",
+            response = self.client.responses.parse(
+                model="gpt-4o-2024-08-06",
                 input=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.7,
-                max_output_tokens=1000
+                text_format=InsightsModel,
             )
-
-            return response.output_text
-
+            return response.output_parsed
         except Exception as e:
             logger.error(f"Error analyzing captions: {e}")
             return None

@@ -164,6 +164,21 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           </div>
         )}
       </div>
+
+      {/* Quotes Section */}
+      {insights.quotes && insights.quotes.length > 0 && (
+        <div className="card">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquare size={20} />
+            <h3 className="text-xl font-semibold">Quotes</h3>
+          </div>
+          <ul className="list-disc pl-6 text-neutral-300">
+            {insights.quotes.map((quote, idx) => (
+              <li key={idx} className="mb-2">"{quote}"</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

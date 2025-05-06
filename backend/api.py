@@ -61,9 +61,9 @@ async def analyze_video(video: VideoURL):
         if not captions:
             raise HTTPException(status_code=500, detail="Failed to get captions")
 
-        # Analyze captions
-        analysis = analyzer.analyze_captions(captions['text'])
-        if not analysis:
+        # Analyze captions (now returns InsightsModel)
+        insights_struct = analyzer.analyze_captions(captions['text'])
+        if not insights_struct:
             raise HTTPException(status_code=500, detail="Failed to analyze captions")
 
         # Minimal videoInfo object (no pytube)
@@ -88,12 +88,36 @@ async def analyze_video(video: VideoURL):
                 "text": seg["text"]
             })
 
-        # Parse analysis string into insights (for now, only summary)
+        # Use structured insights, mapping to frontend types
+        num_topics = len(insights_struct.topics) if insights_struct.topics else 1
+        topics = [
+            {"name": t, "relevance": int(100 / num_topics), "mentions": []}
+            for t in insights_struct.topics
+        ]
+        key_points = [
+            {
+                "timestamp": 0,
+                "title": k,
+                "description": k,
+                "type": "insight"
+            } for k in insights_struct.key_points
+        ]
+        emotions = [
+            {"name": e, "strength": int(100 / len(insights_struct.sentiment.emotions)) if insights_struct.sentiment.emotions else 0}
+            for e in insights_struct.sentiment.emotions
+        ]
+        sentiment = {
+            "positive": insights_struct.sentiment.positive,
+            "negative": insights_struct.sentiment.negative,
+            "neutral": insights_struct.sentiment.neutral,
+            "emotions": emotions
+        }
         insights = {
-            "summary": analysis,
-            "topics": [],
-            "sentiment": {"positive": 0, "negative": 0, "neutral": 0, "emotions": []},
-            "keyPoints": []
+            "summary": insights_struct.summary,
+            "topics": topics,
+            "sentiment": sentiment,
+            "keyPoints": key_points,
+            "quotes": insights_struct.quotes
         }
 
         return {

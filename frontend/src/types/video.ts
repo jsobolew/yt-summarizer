@@ -51,6 +51,7 @@ export interface VideoInsights {
   topics: Topic[];
   sentiment: SentimentAnalysis;
   keyPoints: KeyPoint[];
+  quotes: string[];
 }
 
 export interface VideoAnalysisData {
