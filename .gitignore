@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+.venv/
+.env
+*.env
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Vite/React build artifacts
+frontend/.vite/
+
+# Output/analysis/captions (if generated)
+backend/analysis/
+backend/captions/
+
+# Log files
+*.log
+
+# System files
+Thumbs.db
+
+# Ignore lock files if not needed in VCS
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml 
